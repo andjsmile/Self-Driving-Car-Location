@@ -20,6 +20,24 @@ by using the wheel theory in udacity class, weights are resample in order to use
 
 ![Simulator Run Capture](https://github.com/Fred159/CarND-Kidnapped-Vehicle-Project/blob/master/run%20picture%20pf.jpg)
 
+![Success Run Capture](https://github.com/Fred159/CarND-Kidnapped-Vehicle-Project/blob/master/Success%20Run.jpg)
+
+## Environment 
+1. Docker windows
+2. github online code editor
+
+## References
+1. Udacity class
+2. darienmt
+3. mvirgo
+4. rtsaad
+5. bguisard
+6. sebastian-sampayo
+
+## Summary
+* Particle filter is a great algorithm . It doesn't linearize the complex vehicle model, it just using probability to approximate the result. But it needs a lot of computation. How to extract the feature of the efficient particles (weight) is very important thing.
+* Particle filter's particles quantity bigger, the better result it returns
+
 # Overview
 This repository contains all the code needed to complete the final project for the Localization course in Udacity's Self-Driving Car Nanodegree.
 
