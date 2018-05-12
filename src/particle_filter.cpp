@@ -123,7 +123,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 		//complexity is o(ij);
 		for (int j = 0; j < n_predictions; j++) {
 			//my code with helper function
-			//double distance = dist(observations[i].x, observations[i].y, predicted[j].x, predicted[j].y);
+			double distance = dist(observations[i].x, observations[i].y, predicted[j].x, predicted[j].y);
 
 			//dari code with direct calculation
 			//double xDistance = observations[i].x - predicted[j].x;
