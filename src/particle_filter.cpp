@@ -72,89 +72,77 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
-	//add noise to velocity and yaw rate., seems like vector:particles can't multiply directly with motion model.
-	// the standard variance although extract from sigma_pos from ParticleFilter::init, the each function inclass is saperated , so 
-	// if we want to use the std_sigma of each parameters, we should re-extract again.
 
-	// Engine for later generation of particles
+  // Extracting standard deviations
+  double std_x = std_pos[0];
+  double std_y = std_pos[1];
+  double std_theta = std_pos[2];
 
+  // Creating normal distributions
+  normal_distribution<double> dist_x(0, std_x);
+  normal_distribution<double> dist_y(0, std_y);
+  normal_distribution<double> dist_theta(0, std_theta);
 
-	//double std_x = std_pos[0];
-	//double std_y = std_pos[1];
-	//double std_theta = std_pos[2];
+  // Calculate new state.
+  for (int i = 0; i < num_particles; i++) {
 
-	// normal distribution of distribution x with zero mean and each std.
-	normal_distribution<double> dist_x(0, std_pos[0]);
-	// normal distribution of distribution y with std_y
-	normal_distribution<double> dist_y(0, std_pos[1]);
-	//normal distribution of distribution theta with std_theta
-	normal_distribution<double> angle_theta(0, std_pos[2]);
+  	double theta = particles[i].theta;
 
-	// it needs for loop
+    if ( fabs(yaw_rate) < EPS ) { // When yaw is not changing.
+      particles[i].x += velocity * delta_t * cos( theta );
+      particles[i].y += velocity * delta_t * sin( theta );
+      // yaw continue to be the same.
+    } else {
+      particles[i].x += velocity / yaw_rate * ( sin( theta + yaw_rate * delta_t ) - sin( theta ) );
+      particles[i].y += velocity / yaw_rate * ( cos( theta ) - cos( theta + yaw_rate * delta_t ) );
+      particles[i].theta += yaw_rate * delta_t;
+    }
 
-	for (int i = 0; i < num_particles; i++) {
-		//double theta = particles[i].theta;
-		if (fabs(yaw_rate) >= EPS) {
-			particles[i].x = particles[i].x + (velocity / yaw_rate)*(sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
-			particles[i].y = particles[i].y + (velocity / yaw_rate)*(cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t));
-			particles[i].theta = particles[i].theta + yaw_rate * delta_t;
-		}
-		else {// theta doesn't change
-			particles[i].x = particles[i].x + velocity * delta_t *cos(particles[i].theta);
-			particles[i].y = particles[i].y + velocity * delta_t *sin(particles[i].theta);
-		}
-
-		//add noise  to each particle in particles.
-		particles[i].x = particles[i].x + dist_x(gen);
-		particles[i].y = particles[i].y + dist_y(gen);
-		particles[i].theta = particles[i].theta + angle_theta(gen);
-	}
+    // Adding noise.
+    particles[i].x += dist_x(gen);
+    particles[i].y += dist_y(gen);
+    particles[i].theta += dist_theta(gen);
+  }
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
-	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the 
+	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the
 	//   observed measurement to this particular landmark.
-	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
+	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to
 	//   implement this method and use it as a helper during the updateWeights phase.
-	//observed measurement?
-	int n_observation = observations.size();
-	//size of predicted measurement? 
-	int n_predictions = predicted.size();
 
-	for (int i = 0; i < n_observation; i++) {
-		//for each observation
-		//initializing the min distance as really big number
-		double min_dis = numeric_limits<double>::max();
+  unsigned int nObservations = observations.size();
+  unsigned int nPredictions = predicted.size();
 
-		//initializing the found map that is not in map , this is made for return the nearset measurement around GT.
-		int id_in_map = -100;
-		//complexity is o(ij);
-		for (int j = 0; j < n_predictions; j++) {
-			//my code with helper function
-			//double distance = dist(observations[i].x, observations[i].y, predicted[j].x, predicted[j].y);
+  for (unsigned int i = 0; i < nObservations; i++) { // For each observation
 
-			//dari code with direct calculation
-			double xDistance = observations[i].x - predicted[j].x;
-			double yDistance = observations[i].y - predicted[j].y;
+    // Initialize min distance as a really big number.
+    double minDistance = numeric_limits<double>::max();
 
-			double distance = xDistance * xDistance + yDistance * yDistance;
+    // Initialize the found map in something not possible.
+    int mapId = -1;
 
-			// if distance is smaller than the distance, then save the id , then iterate all the predicted value
-			//finally find the most nearest precited to GT value. 
-			if (distance < min_dis) {
-				min_dis = distance;
-				id_in_map = predicted[j].id;
-			}
-		}
-		//assign the observed measurement to this particular landmark.
-		//for vehicle, it means, this observation is belong to this landmark.
-		observations[i].id = id_in_map;
-	}
+    for (unsigned j = 0; j < nPredictions; j++ ) { // For each predition.
 
+      double xDistance = observations[i].x - predicted[j].x;
+      double yDistance = observations[i].y - predicted[j].y;
+
+      double distance = xDistance * xDistance + yDistance * yDistance;
+
+      // If the "distance" is less than min, stored the id and update min.
+      if ( distance < minDistance ) {
+        minDistance = distance;
+        mapId = predicted[j].id;
+      }
+    }
+
+    // Update the observation identifier.
+    observations[i].id = mapId;
+  }
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
-	const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
+		std::vector<LandmarkObs> observations, Map map_landmarks) {
 	// TODO: Update the weights of each particle using a mult-variate Gaussian distribution. You can read
 	//   more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
 	// NOTE: The observations are given in the VEHICLE'S coordinate system. Your particles are located
@@ -162,100 +150,77 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   Keep in mind that this transformation requires both rotation AND translation (but no scaling).
 	//   The following is a good resource for the theory:
 	//   https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
-	//   and the following is a good resource for the actual equation to implement (look at equation 
+	//   and the following is a good resource for the actual equation to implement (look at equation
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
+  double stdLandmarkRange = std_landmark[0];
+  double stdLandmarkBearing = std_landmark[1];
 
-	//std_landmark provides uncertainty of measurement of landmark in x,y direction . 
-	//Why use there name here . ?
-	double stdLandmarkRange = std_landmark[0];
-	double stdLandmarkBearing = std_landmark[1];
+  for (int i = 0; i < num_particles; i++) {
 
-	for (int i = 0; i < num_particles; i++) {
-		double x = particles[i].x;
-		double y = particles[i].y;
-		double theta = particles[i].theta;
+    double x = particles[i].x;
+    double y = particles[i].y;
+    double theta = particles[i].theta;
+    // Find landmarks in particle's range.
+    double sensor_range_2 = sensor_range * sensor_range;
+    vector<LandmarkObs> inRangeLandmarks;
+    for(unsigned int j = 0; j < map_landmarks.landmark_list.size(); j++) {
+      float landmarkX = map_landmarks.landmark_list[j].x_f;
+      float landmarkY = map_landmarks.landmark_list[j].y_f;
+      int id = map_landmarks.landmark_list[j].id_i;
+      double dX = x - landmarkX;
+      double dY = y - landmarkY;
+      if ( dX*dX + dY*dY <= sensor_range_2 ) {
+        inRangeLandmarks.push_back(LandmarkObs{ id, landmarkX, landmarkY });
+      }
+    }
 
-		//find landmarks in vehicle sensing range
-		double sensor_range_2 = sensor_range * sensor_range;
-		vector<LandmarkObs> inRangeLandmarks;
+    // Transform observation coordinates.
+    vector<LandmarkObs> mappedObservations;
+    for(unsigned int j = 0; j < observations.size(); j++) {
+      double xx = cos(theta)*observations[j].x - sin(theta)*observations[j].y + x;
+      double yy = sin(theta)*observations[j].x + cos(theta)*observations[j].y + y;
+      mappedObservations.push_back(LandmarkObs{ observations[j].id, xx, yy });
+    }
 
-		for (unsigned int j = 0; j < map_landmarks.landmark_list.size(); j++) {
-			float landmarkX = map_landmarks.landmark_list[j].x_f;
-			float landmarkY = map_landmarks.landmark_list[j].y_f;
-			int id = map_landmarks.landmark_list[j].id_i;
-			double dX = x - landmarkX;
-			double dY = y - landmarkY;
+    // Observation association to landmark.
+    dataAssociation(inRangeLandmarks, mappedObservations);
 
-			//in this step, in range is constructed. After this step, we only calculate the landmarks in the range. 
-			if (dX*dX + dY * dY <= sensor_range_2) {
-				inRangeLandmarks.push_back(LandmarkObs{ id, landmarkX, landmarkY });
-			}
-		}
+    // Reseting weight.
+    particles[i].weight = 1.0;
+    // Calculate weights.
+    for(unsigned int j = 0; j < mappedObservations.size(); j++) {
+      double observationX = mappedObservations[j].x;
+      double observationY = mappedObservations[j].y;
 
-		// Transfrom observation coodinates from vehicle coordinate to map (global) coordinate.
-		vector<LandmarkObs> mappedObservations;
-		//Rotation
-		for (int j = 0; j< observations.size(); j++) {
-			double xx = x + cos(theta)*observations[j].x - sin(theta) * observations[j].y;
-			double yy = y + sin(theta)*observations[j].x + cos(theta) * observations[j].y;
-			//using struct defined in helperfunction.h LandmarkObs, to make a after transition and rotation transformed observation data.
-			//The @param observations is a noise mixed sensor measurement data.
-			mappedObservations.push_back(LandmarkObs{ observations[j].id, xx, yy });
-		}
+      int landmarkId = mappedObservations[j].id;
 
-		//Observation association with landmark
-		dataAssociation(inRangeLandmarks, mappedObservations);
+      double landmarkX, landmarkY;
+      unsigned int k = 0;
+      unsigned int nLandmarks = inRangeLandmarks.size();
+      bool found = false;
+      while( !found && k < nLandmarks ) {
+        if ( inRangeLandmarks[k].id == landmarkId) {
+          found = true;
+          landmarkX = inRangeLandmarks[k].x;
+          landmarkY = inRangeLandmarks[k].y;
+        }
+        k++;
+      }
 
-		//reset the weight, I think this line can be deleted since when particles' weights were set before with 1.0
-		particles[i].weight = 1.0;
+      // Calculating weight.
+      double dX = observationX - landmarkX;
+      double dY = observationY - landmarkY;
 
-		//calculate the weights
-		for (int j = 0; j < mappedObservations.size(); j++) {
-			double observationX = mappedObservations[j].x;
-			double observationY = mappedObservations[j].y;
-
-			int landmarkId = mappedObservations[j].id;
-
-			double landmarkX, landmarkY;
-
-			int k = 0;
-			int nLandmarks = inRangeLandmarks.size();
-			bool found = false;
-			while (!found && k < nLandmarks) {
-				if (inRangeLandmarks[k].id == landmarkId) {
-					found = true;
-					landmarkX = inRangeLandmarks[k].x;
-					landmarkY = inRangeLandmarks[k].y;
-				}
-				k++;
-			}
-
-			//calculating weight
-			double dX = observationX - landmarkX;
-			double dY = observationY - landmarkY;
-
-			//Since we assume the correlation between x direction and y direction is not exist, then rho in wiki is zero.
-			//my weight update
-			//double weight = (1 / 2 * M_PI*stdLandmarkRange*stdLandmarkBearing)*exp(-(1 / 2)*(dX*dX / (stdLandmarkRange* stdLandmarkRange) + (dY*dY) / (stdLandmarkBearing*stdLandmarkBearing)));
-
-			//dari weight update
-			double weight = (1 / (2 * M_PI*stdLandmarkRange*stdLandmarkBearing)) * exp(-(dX*dX / (2 * stdLandmarkRange*stdLandmarkRange) + (dY*dY / (2 * stdLandmarkBearing*stdLandmarkBearing))));
-
-			//if weight equal to zero. then multiply to the EPS. But I dont know why it have to multiply with EPS. 
-			// just make weight become zero can not work?
-			if (weight == 0) {
-				particles[i].weight = particles[i].weight*EPS;
-			}
-
-			//if weight doesn't equal to zero, then weight should be multiply by i times. because it is multivariate define.
-			else {
-				particles[i].weight = particles[i].weight * weight;
-			}
-		}
-	}
+      double weight = ( 1/(2*M_PI*stdLandmarkRange*stdLandmarkBearing)) * exp( -( dX*dX/(2*stdLandmarkRange*stdLandmarkRange) + (dY*dY/(2*stdLandmarkBearing*stdLandmarkBearing)) ) );
+      if (weight == 0) {
+        particles[i].weight *= EPS;
+      } else {
+        particles[i].weight *= weight;
+      }
+    }
+  }
 }
-
 
 void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight.
