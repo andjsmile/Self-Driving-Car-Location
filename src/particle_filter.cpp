@@ -154,7 +154,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
-		std::vector<LandmarkObs> observations, Map map_landmarks) {
+	const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
 	// TODO: Update the weights of each particle using a mult-variate Gaussian distribution. You can read
 	//   more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
 	// NOTE: The observations are given in the VEHICLE'S coordinate system. Your particles are located
@@ -162,76 +162,98 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   Keep in mind that this transformation requires both rotation AND translation (but no scaling).
 	//   The following is a good resource for the theory:
 	//   https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
-	//   and the following is a good resource for the actual equation to implement (look at equation
+	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
-  double stdLandmarkRange = std_landmark[0];
-  double stdLandmarkBearing = std_landmark[1];
 
-  for (int i = 0; i < num_particles; i++) {
+	//std_landmark provides uncertainty of measurement of landmark in x,y direction . 
+	//Why use there name here . ?
+	double stdLandmarkRange = std_landmark[0];
+	double stdLandmarkBearing = std_landmark[1];
 
-    double x = particles[i].x;
-    double y = particles[i].y;
-    double theta = particles[i].theta;
-    // Find landmarks in particle's range.
-    double sensor_range_2 = sensor_range * sensor_range;
-    vector<LandmarkObs> inRangeLandmarks;
-    for(unsigned int j = 0; j < map_landmarks.landmark_list.size(); j++) {
-      float landmarkX = map_landmarks.landmark_list[j].x_f;
-      float landmarkY = map_landmarks.landmark_list[j].y_f;
-      int id = map_landmarks.landmark_list[j].id_i;
-      double dX = x - landmarkX;
-      double dY = y - landmarkY;
-      if ( dX*dX + dY*dY <= sensor_range_2 ) {
-        inRangeLandmarks.push_back(LandmarkObs{ id, landmarkX, landmarkY });
-      }
-    }
+	for (int i = 0; i < num_particles; i++) {
+		double x = particles[i].x;
+		double y = particles[i].y;
+		double theta = particles[i].theta;
 
-    // Transform observation coordinates.
-    vector<LandmarkObs> mappedObservations;
-    for(unsigned int j = 0; j < observations.size(); j++) {
-      double xx = cos(theta)*observations[j].x - sin(theta)*observations[j].y + x;
-      double yy = sin(theta)*observations[j].x + cos(theta)*observations[j].y + y;
-      mappedObservations.push_back(LandmarkObs{ observations[j].id, xx, yy });
-    }
+		//find landmarks in vehicle sensing range
+		double sensor_range_2 = sensor_range * sensor_range;
+		vector<LandmarkObs> inRangeLandmarks;
 
-    // Observation association to landmark.
-    dataAssociation(inRangeLandmarks, mappedObservations);
+		for (unsigned int j = 0; j < map_landmarks.landmark_list.size(); j++) {
+			float landmarkX = map_landmarks.landmark_list[j].x_f;
+			float landmarkY = map_landmarks.landmark_list[j].y_f;
+			int id = map_landmarks.landmark_list[j].id_i;
+			double dX = x - landmarkX;
+			double dY = y - landmarkY;
 
-    // Reseting weight.
-    particles[i].weight = 1.0;
-    // Calculate weights.
-    for(unsigned int j = 0; j < mappedObservations.size(); j++) {
-      double observationX = mappedObservations[j].x;
-      double observationY = mappedObservations[j].y;
+			//in this step, in range is constructed. After this step, we only calculate the landmarks in the range. 
+			if (dX*dX + dY * dY <= sensor_range_2) {
+				inRangeLandmarks.push_back(LandmarkObs{ id, landmarkX, landmarkY });
+			}
+		}
 
-      int landmarkId = mappedObservations[j].id;
+		// Transfrom observation coodinates from vehicle coordinate to map (global) coordinate.
+		vector<LandmarkObs> mappedObservations;
+		//Rotation
+		for (int j = 0; j< observations.size(); j++) {
+			double xx = x + cos(theta)*observations[j].x - sin(theta) * observations[j].y;
+			double yy = y + sin(theta)*observations[j].x + cos(theta) * observations[j].y;
+			//using struct defined in helperfunction.h LandmarkObs, to make a after transition and rotation transformed observation data.
+			//The @param observations is a noise mixed sensor measurement data.
+			mappedObservations.push_back(LandmarkObs{ observations[j].id, xx, yy });
+		}
 
-      double landmarkX, landmarkY;
-      unsigned int k = 0;
-      unsigned int nLandmarks = inRangeLandmarks.size();
-      bool found = false;
-      while( !found && k < nLandmarks ) {
-        if ( inRangeLandmarks[k].id == landmarkId) {
-          found = true;
-          landmarkX = inRangeLandmarks[k].x;
-          landmarkY = inRangeLandmarks[k].y;
-        }
-        k++;
-      }
+		//Observation association with landmark
+		dataAssociation(inRangeLandmarks, mappedObservations);
 
-      // Calculating weight.
-      double dX = observationX - landmarkX;
-      double dY = observationY - landmarkY;
+		//reset the weight, I think this line can be deleted since when particles' weights were set before with 1.0
+		particles[i].weight = 1.0;
 
-      double weight = ( 1/(2*M_PI*stdLandmarkRange*stdLandmarkBearing)) * exp( -( dX*dX/(2*stdLandmarkRange*stdLandmarkRange) + (dY*dY/(2*stdLandmarkBearing*stdLandmarkBearing)) ) );
-      if (weight == 0) {
-        particles[i].weight *= EPS;
-      } else {
-        particles[i].weight *= weight;
-      }
-    }
-  }
+		//calculate the weights
+		for (int j = 0; j < mappedObservations.size(); j++) {
+			double observationX = mappedObservations[j].x;
+			double observationY = mappedObservations[j].y;
+
+			int landmarkId = mappedObservations[j].id;
+
+			double landmarkX, landmarkY;
+
+			int k = 0;
+			int nLandmarks = inRangeLandmarks.size();
+			bool found = false;
+			while (!found && k < nLandmarks) {
+				if (inRangeLandmarks[k].id == landmarkId) {
+					found = true;
+					landmarkX = inRangeLandmarks[k].x;
+					landmarkY = inRangeLandmarks[k].y;
+				}
+				k++;
+			}
+
+			//calculating weight
+			double dX = observationX - landmarkX;
+			double dY = observationY - landmarkY;
+
+			//Since we assume the correlation between x direction and y direction is not exist, then rho in wiki is zero.
+			//my weight update
+			//double weight = (1 / 2 * M_PI*stdLandmarkRange*stdLandmarkBearing)*exp(-(1 / 2)*(dX*dX / (stdLandmarkRange* stdLandmarkRange) + (dY*dY) / (stdLandmarkBearing*stdLandmarkBearing)));
+
+			//dari weight update
+			double weight = (1 / (2 * M_PI*stdLandmarkRange*stdLandmarkBearing)) * exp(-(dX*dX / (2 * stdLandmarkRange*stdLandmarkRange) + (dY*dY / (2 * stdLandmarkBearing*stdLandmarkBearing))));
+
+			//if weight equal to zero. then multiply to the EPS. But I dont know why it have to multiply with EPS. 
+			// just make weight become zero can not work?
+			if (weight == 0) {
+				particles[i].weight = particles[i].weight*EPS;
+			}
+
+			//if weight doesn't equal to zero, then weight should be multiply by i times. because it is multivariate define.
+			else {
+				particles[i].weight = particles[i].weight * weight;
+			}
+		}
+	}
 }
 
 void ParticleFilter::resample() {
