@@ -19,9 +19,7 @@
 
 #define EPS 0.00001
 
-random_device rd;
-default_random_engine gen(rd());
-//std::default_random_engine gen;
+std::default_random_engine gen;
 
 using namespace std;
 
