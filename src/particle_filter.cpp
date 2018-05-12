@@ -112,39 +112,45 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
-	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the
+	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the 
 	//   observed measurement to this particular landmark.
-	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to
+	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
+	//observed measurement?
+	int n_observation = observations.size();
+	//size of predicted measurement? 
+	int n_predictions = predicted.size();
 
-  unsigned int nObservations = observations.size();
-  unsigned int nPredictions = predicted.size();
+	for (int i = 0; i < n_observation; i++) {
+		//for each observation
+		//initializing the min distance as really big number
+		double min_dis = numeric_limits<double>::max();
 
-  for (unsigned int i = 0; i < nObservations; i++) { // For each observation
+		//initializing the found map that is not in map , this is made for return the nearset measurement around GT.
+		int id_in_map = -100;
+		//complexity is o(ij);
+		for (int j = 0; j < n_predictions; j++) {
+			//my code with helper function
+			//double distance = dist(observations[i].x, observations[i].y, predicted[j].x, predicted[j].y);
 
-    // Initialize min distance as a really big number.
-    double minDistance = numeric_limits<double>::max();
+			//dari code with direct calculation
+			double xDistance = observations[i].x - predicted[j].x;
+			double yDistance = observations[i].y - predicted[j].y;
 
-    // Initialize the found map in something not possible.
-    int mapId = -1;
+			double distance = xDistance * xDistance + yDistance * yDistance;
 
-    for (unsigned j = 0; j < nPredictions; j++ ) { // For each predition.
+			// if distance is smaller than the distance, then save the id , then iterate all the predicted value
+			//finally find the most nearest precited to GT value. 
+			if (distance < min_dis) {
+				min_dis = distance;
+				id_in_map = predicted[j].id;
+			}
+		}
+		//assign the observed measurement to this particular landmark.
+		//for vehicle, it means, this observation is belong to this landmark.
+		observations[i].id = id_in_map;
+	}
 
-      double xDistance = observations[i].x - predicted[j].x;
-      double yDistance = observations[i].y - predicted[j].y;
-
-      double distance = xDistance * xDistance + yDistance * yDistance;
-
-      // If the "distance" is less than min, stored the id and update min.
-      if ( distance < minDistance ) {
-        minDistance = distance;
-        mapId = predicted[j].id;
-      }
-    }
-
-    // Update the observation identifier.
-    observations[i].id = mapId;
-  }
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
@@ -249,6 +255,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		}
 	}
 }
+
+
 void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight.
 	// NOTE: You may find std::discrete_distribution helpful here.
