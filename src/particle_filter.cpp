@@ -21,6 +21,9 @@
 
 using namespace std;
 
+random_device rd;
+default_random_engine gen(rd());
+
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
 	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -30,6 +33,9 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	if (is_initialized) {
 		return;
 	}
+	// Engine for later generation of particles
+	random_device rd;
+	default_random_engine gen(rd());
 
 	num_particles = 1000;
 
@@ -38,9 +44,11 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	double std_theta = std[2];
 
 	// normal distribution of distribution x with std_x 
-	normal_distribution<double> dist_x(x, std_x );
+	normal_distribution<double> dist_x(x, std_x);
+
 	// normal distribution of distribution y with std_y
-	normal_distribution<double> dist_y(y, std_y );
+	normal_distribution<double> dist_y(y, std_y);
+
 	//normal distribution of distribution theta with std_theta
 	normal_distribution<double> angle_theta(theta, std_theta);
 
@@ -49,6 +57,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 		//Using struct to make a particle structure and assign every information about each particles
 		Particle particle;
 		particle.id = i;
+		particle.x = dist_x(generate);
 		particle.x = dist_x(gen);
 		particle.y = dist_y(gen);
 		particle.theta = angle_theta(gen);
@@ -74,6 +83,10 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	//add noise to velocity and yaw rate., seems like vector:particles can't multiply directly with motion model.
 	// the standard variance although extract from sigma_pos from ParticleFilter::init, the each function inclass is saperated , so 
 	// if we want to use the std_sigma of each parameters, we should re-extract again.
+
+	// Engine for later generation of particles
+
+
 	double std_x = std_pos[0];
 	double std_y = std_pos[1];
 	double std_theta = std_pos[2];
