@@ -98,6 +98,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	// it needs for loop
 
 	for (int i = 0; i < num_particles; i++) {
+		double theta = particles[i].theta;
 		if (particles[i].theta > EPS) {
 			particles[i].x = particles[i].x + (velocity / yaw_rate)*(sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
 			particles[i].y = particles[i].y + (velocity / yaw_rate)*(cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t));
