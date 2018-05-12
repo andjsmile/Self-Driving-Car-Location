@@ -98,17 +98,15 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	// it needs for loop
 
 	for (int i = 0; i < num_particles; i++) {
-		double theta = particles[i].theta;
-		if (particles[i].theta > EPS) {
+		//double theta = particles[i].theta;
+		if (fabs(yaw_rate) >= EPS) {
 			particles[i].x = particles[i].x + (velocity / yaw_rate)*(sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
 			particles[i].y = particles[i].y + (velocity / yaw_rate)*(cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t));
 			particles[i].theta = particles[i].theta + yaw_rate * delta_t;
 		}
-		else {
+		else {// theta doesn't change
 			particles[i].x = particles[i].x + velocity * delta_t *cos(particles[i].theta);
 			particles[i].y = particles[i].y + velocity * delta_t *sin(particles[i].theta);
-			// theta doesn't change
-			//particles[i].theta = particles[i].theta;
 		}
 
 		//add noise  to each particle in particles.
@@ -137,7 +135,14 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 		int id_in_map = -100;
 		//complexity is o(ij);
 		for (int j = 0; j < n_predictions; j++) {
-			double distance = dist(observations[i].x, observations[i].y, predicted[j].x, predicted[j].y);
+			//my code with helper function
+			//double distance = dist(observations[i].x, observations[i].y, predicted[j].x, predicted[j].y);
+
+			//dari code with direct calculation
+			double xDistance = observations[i].x - predicted[j].x;
+			double yDistance = observations[i].y - predicted[j].y;
+
+			double distance = xDistance * xDistance + yDistance * yDistance;
 
 			// if distance is smaller than the distance, then save the id , then iterate all the predicted value
 			//finally find the most nearest precited to GT value. 
