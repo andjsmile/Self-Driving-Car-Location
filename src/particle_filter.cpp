@@ -273,18 +273,6 @@ void ParticleFilter::resample() {
   particles = new_particles;
 }
 
-// Convert coordinates from particle to map 
-LandmarkObs ParticleFilter::transformCoords(Particle part, LandmarkObs obs) {
-
-  LandmarkObs transformed_coords;
-
-  transformed_coords.id = obs.id;
-  transformed_coords.x = obs.x * cos(part.theta) - obs.y * sin(part.theta) + part.x;
-  transformed_coords.y = obs.x * sin(part.theta) + obs.y * cos(part.theta) + part.y;
-
-  return transformed_coords;
-}
-
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
 {
 	//particle: the particle to assign each listed association, and association's (x,y) world coordinates mapping to
