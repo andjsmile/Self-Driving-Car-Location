@@ -263,35 +263,35 @@ void ParticleFilter::resample() {
 
   // Get weights and max weight.
   vector<double> weights;
-  double maxWeight = numeric_limits<double>::min();
+  double max_weight = numeric_limits<double>::min();
   for(int i = 0; i < num_particles; i++) {
     weights.push_back(particles[i].weight);
-    if ( particles[i].weight > maxWeight ) {
-      maxWeight = particles[i].weight;
+    if ( particles[i].weight > max_weight ) {
+      max_weight = particles[i].weight;
     }
   }
 
   // Creating distributions.
-  uniform_real_distribution<double> distDouble(0.0, maxWeight);
-  uniform_int_distribution<int> distInt(0, num_particles - 1);
+  uniform_real_distribution<float> dist_float(0.0, maxWeight);
+  uniform_int_distribution<int> dist_int(0, num_particles - 1);
 
   // Generating index.
-  int index = distInt(gen);
+  int index = dist_int(gen);
 
   double beta = 0.0;
 
   // the wheel
-  vector<Particle> resampledParticles;
+  vector<Particle> resampled_Particles;
   for(int i = 0; i < num_particles; i++) {
-    beta += distDouble(gen) * 2.0;
+    beta += dist_float(gen) * 2.0;
     while( beta > weights[index]) {
       beta -= weights[index];
       index = (index + 1) % num_particles;
     }
-    resampledParticles.push_back(particles[index]);
+    resampled_particles.push_back(particles[index]);
   }
 
-  particles = resampledParticles;
+  particles = resampled_particles;
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
