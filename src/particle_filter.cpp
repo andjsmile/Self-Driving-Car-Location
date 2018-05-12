@@ -257,21 +257,34 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 }
 
 void ParticleFilter::resample() {
+  // Resample particles with replacement with probability proportional to their weight. 
 
-  std::vector<Particle> new_particles;
-  int index;
-
-  // Initializes discrete distribution function
+#ifdef DEBUG
+  cout << "resample()" << endl;
+#endif
   std::random_device rd;
-  std::mt19937 gen(rd());
-  std::discrete_distribution<int> weight_distribution(weights.begin(), weights.end());
+  std::mt19937 generator_wts(rd());
+  std::discrete_distribution<int> d(weights.begin(), weights.end());
+  std::vector<Particle> resampledParticles(num_particles);
 
-  for (int i = 0; i < num_particles; i++) {
-    index = weight_distribution(gen);
-    new_particles.push_back(particles[index]);
+  // resampledParticles.resize(num_particles);
+  for (int i=0; i < num_particles; i++) 
+  {
+    int idx = d(generator_wts);
+    resampledParticles[i] = particles[idx];
   }
-  particles = new_particles;
+  
+#ifdef DEBUG
+  cout << "resampledParticles.size() = "<< resampledParticles.size() << endl;
+#endif
+
+  particles = resampledParticles;
+
+#ifdef DEBUG
+  printParticles(particles, weights);
+#endif
 }
+
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
 {
