@@ -19,6 +19,7 @@
 
 #define EPS 0.00001
 
+std::default_random_engine gen;
 
 using namespace std;
 
