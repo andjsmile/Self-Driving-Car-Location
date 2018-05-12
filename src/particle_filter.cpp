@@ -21,8 +21,8 @@
 
 using namespace std;
 
-random_device rd;
-default_random_engine gen(rd());
+//random_device rd;
+//default_random_engine gen(rd());
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
