@@ -272,7 +272,7 @@ void ParticleFilter::resample() {
   }
 
   // Creating distributions.
-  uniform_real_distribution<float> dist_float(0.0, maxWeight);
+  uniform_real_distribution<float> dist_float(0.0, max_weight);
   uniform_int_distribution<int> dist_int(0, num_particles - 1);
 
   // Generating index.
@@ -281,7 +281,7 @@ void ParticleFilter::resample() {
   double beta = 0.0;
 
   // the wheel
-  vector<Particle> resampled_Particles;
+  vector<Particle> resampled_particles;
   for(int i = 0; i < num_particles; i++) {
     beta += dist_float(gen) * 2.0;
     while( beta > weights[index]) {
