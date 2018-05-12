@@ -192,7 +192,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		//Observation association with landmark
 		dataAssociation(inRangeLandmarks, mappedObservations);
 
-		//reset the weight, I think this line can be deleted since when particles' weights were set before with 1.0
+		//reset the weight to 1.0
 		particles[i].weight = 1.0;
 
 		//calculate the weights
@@ -224,7 +224,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			//weight update
 			double weight = (1 / (2 * M_PI*stdLandmarkRange*stdLandmarkBearing)) * exp(-(dX*dX / (2 * stdLandmarkRange*stdLandmarkRange) + (dY*dY / (2 * stdLandmarkBearing*stdLandmarkBearing))));
 
-			//if weight equal to zero. then multiply to the EPS. But I dont know why it have to multiply with EPS. 
+			//if weight equal to zero. then multiply to the EPS. 
 			if (weight == 0) {
 				particles[i].weight = particles[i].weight*EPS;
 			}
