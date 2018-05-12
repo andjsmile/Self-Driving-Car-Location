@@ -257,22 +257,32 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 }
 
 void ParticleFilter::resample() {
-	// TODO: Resample particles with replacement with probability proportional to their weight.
-	// NOTE: You may find std::discrete_distribution helpful here.
-	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
-	//vector for new particles
-	vector<Particle> new_particles(num_particles);
-	int index;
-	random_device rd;  
-	std::mt19937 gen(rd());
-  	std::discrete_distribution<> d(weights.begin(), weights.end());
-	
-	//use discrete distribution to return particles by different weights
-	for (int i = 0; i < num_particles; i++) {
-		index = d(gen);
-		new_particles.push_back(particles[index]);
-	}
-	particles = new_particles;
+
+  std::vector<Particle> new_particles;
+  int index;
+
+  // Initializes discrete distribution function
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::discrete_distribution<int> weight_distribution(weights.begin(), weights.end());
+
+  for (int i = 0; i < num_particles; i++) {
+    index = weight_distribution(gen);
+    new_particles.push_back(particles[index]);
+  }
+  particles = new_particles;
+}
+
+// Convert coordinates from particle to map 
+LandmarkObs ParticleFilter::transformCoords(Particle part, LandmarkObs obs) {
+
+  LandmarkObs transformed_coords;
+
+  transformed_coords.id = obs.id;
+  transformed_coords.x = obs.x * cos(part.theta) - obs.y * sin(part.theta) + part.x;
+  transformed_coords.y = obs.x * sin(part.theta) + obs.y * cos(part.theta) + part.y;
+
+  return transformed_coords;
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
