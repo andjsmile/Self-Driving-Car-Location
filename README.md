@@ -1,3 +1,25 @@
+# Kidnapped Vehicle project
+Use particle filter to localize the accurate position.
+## Sensor
+1. GPS data
+use GPS signal to make transition matrix. Converting the observations in vehicle coordinate into global coordinate. 
+2. invehicle sensor 
+extract yaw and velocity.(actually, it also can derived from GPS data , but it maybe not so accurate)
+
+## Particle fitler
+1.Initialization
+
+2.using vehicle motion model to predict the next vehicle position 
+
+3.using updated state and sensor value , by converting the coordinate between vehicle and map , we can calculate the particles' weights. 
+Particles far away from predicted state that have small weights.
+by using these weights, algorithm generates the actual vehicle position
+
+4.resample the weight. 
+by using the wheel theory in udacity class, weights are resample in order to use in next step. 
+
+![Simulator Run Capture](https://github.com/Fred159/CarND-Kidnapped-Vehicle-Project/blob/master/run%20picture%20pf.jpg)
+
 # Overview
 This repository contains all the code needed to complete the final project for the Localization course in Udacity's Self-Driving Car Nanodegree.
 
