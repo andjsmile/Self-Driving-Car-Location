@@ -72,37 +72,43 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
+	//add noise to velocity and yaw rate., seems like vector:particles can't multiply directly with motion model.
+	// the standard variance although extract from sigma_pos from ParticleFilter::init, the each function inclass is saperated , so 
+	// if we want to use the std_sigma of each parameters, we should re-extract again.
 
-  // Extracting standard deviations
-  double std_x = std_pos[0];
-  double std_y = std_pos[1];
-  double std_theta = std_pos[2];
+	// Engine for later generation of particles
 
-  // Creating normal distributions
-  normal_distribution<double> dist_x(0, std_x);
-  normal_distribution<double> dist_y(0, std_y);
-  normal_distribution<double> dist_theta(0, std_theta);
 
-  // Calculate new state.
-  for (int i = 0; i < num_particles; i++) {
+	//double std_x = std_pos[0];
+	//double std_y = std_pos[1];
+	//double std_theta = std_pos[2];
 
-  	double theta = particles[i].theta;
+	// normal distribution of distribution x with zero mean and each std.
+	normal_distribution<double> dist_x(0, std_pos[0]);
+	// normal distribution of distribution y with std_y
+	normal_distribution<double> dist_y(0, std_pos[1]);
+	//normal distribution of distribution theta with std_theta
+	normal_distribution<double> angle_theta(0, std_pos[2]);
 
-    if ( fabs(yaw_rate) < EPS ) { // When yaw is not changing.
-      particles[i].x += velocity * delta_t * cos( theta );
-      particles[i].y += velocity * delta_t * sin( theta );
-      // yaw continue to be the same.
-    } else {
-      particles[i].x += velocity / yaw_rate * ( sin( theta + yaw_rate * delta_t ) - sin( theta ) );
-      particles[i].y += velocity / yaw_rate * ( cos( theta ) - cos( theta + yaw_rate * delta_t ) );
-      particles[i].theta += yaw_rate * delta_t;
-    }
+	// it needs for loop
 
-    // Adding noise.
-    particles[i].x += dist_x(gen);
-    particles[i].y += dist_y(gen);
-    particles[i].theta += dist_theta(gen);
-  }
+	for (int i = 0; i < num_particles; i++) {
+		//double theta = particles[i].theta;
+		if (fabs(yaw_rate) >= EPS) {
+			particles[i].x = particles[i].x + (velocity / yaw_rate)*(sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
+			particles[i].y = particles[i].y + (velocity / yaw_rate)*(cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t));
+			particles[i].theta = particles[i].theta + yaw_rate * delta_t;
+		}
+		else {// theta doesn't change
+			particles[i].x = particles[i].x + velocity * delta_t *cos(particles[i].theta);
+			particles[i].y = particles[i].y + velocity * delta_t *sin(particles[i].theta);
+		}
+
+		//add noise  to each particle in particles.
+		particles[i].x = particles[i].x + dist_x(gen);
+		particles[i].y = particles[i].y + dist_y(gen);
+		particles[i].theta = particles[i].theta + angle_theta(gen);
+	}
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
