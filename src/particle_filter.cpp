@@ -122,15 +122,9 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 		int id_in_map = -100;
 		//complexity is o(ij);
 		for (int j = 0; j < n_predictions; j++) {
-			//my code with helper function
+			//distance calculation with helper function
 			double distance = dist(observations[i].x, observations[i].y, predicted[j].x, predicted[j].y);
-
-			//dari code with direct calculation
-			//double xDistance = observations[i].x - predicted[j].x;
-			//double yDistance = observations[i].y - predicted[j].y;
-
-			//double distance = xDistance * xDistance + yDistance * yDistance;
-
+			
 			// if distance is smaller than the distance, then save the id , then iterate all the predicted value
 			//finally find the most nearest precited to GT value. 
 			if (distance < min_dis) {
@@ -159,7 +153,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   http://planning.cs.uiuc.edu/node99.html
 
 	//std_landmark provides uncertainty of measurement of landmark in x,y direction . 
-	//Why use there name here . ?
 	double stdLandmarkRange = std_landmark[0];
 	double stdLandmarkBearing = std_landmark[1];
 
@@ -229,10 +222,10 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
 			//Since we assume the correlation between x direction and y direction is not exist, then rho in wiki is zero.
 			//my weight update
-			//double weight = (1 / 2 * M_PI*stdLandmarkRange*stdLandmarkBearing)*exp(-(1 / 2)*(dX*dX / (stdLandmarkRange* stdLandmarkRange) + (dY*dY) / (stdLandmarkBearing*stdLandmarkBearing)));
+			double weight = (1 / 2 * M_PI*stdLandmarkRange*stdLandmarkBearing)*exp(-(1 / 2)*(dX*dX / (stdLandmarkRange* stdLandmarkRange) + (dY*dY) / (stdLandmarkBearing*stdLandmarkBearing)));
 
 			//dari weight update
-			double weight = (1 / (2 * M_PI*stdLandmarkRange*stdLandmarkBearing)) * exp(-(dX*dX / (2 * stdLandmarkRange*stdLandmarkRange) + (dY*dY / (2 * stdLandmarkBearing*stdLandmarkBearing))));
+			//double weight = (1 / (2 * M_PI*stdLandmarkRange*stdLandmarkBearing)) * exp(-(dX*dX / (2 * stdLandmarkRange*stdLandmarkRange) + (dY*dY / (2 * stdLandmarkBearing*stdLandmarkBearing))));
 
 			//if weight equal to zero. then multiply to the EPS. But I dont know why it have to multiply with EPS. 
 			// just make weight become zero can not work?
