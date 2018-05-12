@@ -260,38 +260,17 @@ void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight.
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+	//vector for new particles
+	vector<Particle> new_particles(num_particles);
 
-  // Get weights and max weight.
-  vector<double> weights;
-  double maxWeight = numeric_limits<double>::min();
-  for(int i = 0; i < num_particles; i++) {
-    weights.push_back(particles[i].weight);
-    if ( particles[i].weight > maxWeight ) {
-      maxWeight = particles[i].weight;
-    }
-  }
-
-  // Creating distributions.
-  uniform_real_distribution<double> distDouble(0.0, maxWeight);
-  uniform_int_distribution<int> distInt(0, num_particles - 1);
-
-  // Generating index.
-  int index = distInt(gen);
-
-  double beta = 0.0;
-
-  // the wheel
-  vector<Particle> resampledParticles;
-  for(int i = 0; i < num_particles; i++) {
-    beta += distDouble(gen) * 2.0;
-    while( beta > weights[index]) {
-      beta -= weights[index];
-      index = (index + 1) % num_particles;
-    }
-    resampledParticles.push_back(particles[index]);
-  }
-
-  particles = resampledParticles;
+	//use discrete distribution to return particles by different weights
+	random_device rd;
+	default_random_engine gen(rd());
+	for (int i = 0; i < num_particles; i++) {
+		discrete_distribution<int> index(weights.begin(), weights.end());
+		new_particles[i] = particles[index(gen)];
+	}
+	particles = new_particles;
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
