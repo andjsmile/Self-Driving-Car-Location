@@ -185,29 +185,28 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		double sensor_range_2 = sensor_range * sensor_range;
 		vector<LandmarkObs> inRangeLandmarks;
 
-		for (int j = 0; j < map_landmarks.landmark_list.size(); j++) {
+		for (unsigned int j = 0; j < map_landmarks.landmark_list.size(); j++) {
 			float landmarkX = map_landmarks.landmark_list[j].x_f;
 			float landmarkY = map_landmarks.landmark_list[j].y_f;
 			int id = map_landmarks.landmark_list[j].id_i;
-
 			double dX = x - landmarkX;
 			double dY = y - landmarkY;
 
 			//in this step, in range is constructed. After this step, we only calculate the landmarks in the range. 
 			if (dX*dX + dY * dY <= sensor_range_2) {
-				inRangeLandmarks.push_back(LandmarkObs{ id, landmarkX,landmarkY });
+				inRangeLandmarks.push_back(LandmarkObs{ id, landmarkX, landmarkY });
 			}
 		}
 
 		// Transfrom observation coodinates from vehicle coordinate to map (global) coordinate.
 		vector<LandmarkObs> mappedObservations;
-
+		//Rotation
 		for (int j = 0; j< observations.size(); j++) {
 			double xx = x + cos(theta)*observations[j].x - sin(theta) * observations[j].y;
 			double yy = y + sin(theta)*observations[j].x + cos(theta) * observations[j].y;
 			//using struct defined in helperfunction.h LandmarkObs, to make a after transition and rotation transformed observation data.
 			//The @param observations is a noise mixed sensor measurement data.
-			mappedObservations.push_back(LandmarkObs{ observations[j].id,xx,yy });
+			mappedObservations.push_back(LandmarkObs{ observations[j].id, xx, yy });
 		}
 
 		//Observation association with landmark
@@ -242,7 +241,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			double dY = observationY - landmarkY;
 
 			//Since we assume the correlation between x direction and y direction is not exist, then rho in wiki is zero.
-			double weight = (1 / 2 * M_PI*stdLandmarkRange*stdLandmarkBearing)*exp(-(1 / 2)*(dX*dX / (stdLandmarkRange* stdLandmarkRange) + (dY*dY) / (stdLandmarkBearing*stdLandmarkBearing)));
+			//my weight update
+			//double weight = (1 / 2 * M_PI*stdLandmarkRange*stdLandmarkBearing)*exp(-(1 / 2)*(dX*dX / (stdLandmarkRange* stdLandmarkRange) + (dY*dY) / (stdLandmarkBearing*stdLandmarkBearing)));
+
+			//dari weight update
+			double weight = (1 / (2 * M_PI*stdLandmarkRange*stdLandmarkBearing)) * exp(-(dX*dX / (2 * stdLandmarkRange*stdLandmarkRange) + (dY*dY / (2 * stdLandmarkBearing*stdLandmarkBearing))));
 
 			//if weight equal to zero. then multiply to the EPS. But I dont know why it have to multiply with EPS. 
 			// just make weight become zero can not work?
