@@ -57,7 +57,6 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 		//Using struct to make a particle structure and assign every information about each particles
 		Particle particle;
 		particle.id = i;
-		particle.x = dist_x(generate);
 		particle.x = dist_x(gen);
 		particle.y = dist_y(gen);
 		particle.theta = angle_theta(gen);
