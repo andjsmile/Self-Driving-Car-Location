@@ -74,16 +74,16 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	//add noise to velocity and yaw rate., seems like vector:particles can't multiply directly with motion model.
 	// the standard variance although extract from sigma_pos from ParticleFilter::init, the each function inclass is saperated , so 
 	// if we want to use the std_sigma of each parameters, we should re-extract again.
-	double std_x = std[0];
-	double std_y = std[1];
-	double std_theta = std[2];
+	double std_x = std_pos[0];
+	double std_y = std_pos[1];
+	double std_theta = std_pos[2];
 
 	// normal distribution of distribution x with std_x 
-	std::normal_distribution<> dist_x{0, std_x };
+	std::normal_distribution<> dist_x(x, std_x);
 	// normal distribution of distribution y with std_y
-	std::normal_distribution<> dist_y{0, std_y };
+	std::normal_distribution<> dist_y(y, std_y);
 	//normal distribution of distribution theta with std_theta
-	std::normal_distribution<> angle_theta{0, std_theta };
+	std::normal_distribution<> angle_theta(theta, std_theta);
 
 	// it needs for loop
 	
@@ -191,7 +191,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			double yy = y + sin(theta)*observations[j].x + cos(theta) * observations[j].y;
 			//using struct defined in helperfunction.h LandmarkObs, to make a after transition and rotation transformed observation data.
 			//The @param observations is a noise mixed sensor measurement data.
-			mappedObservations.push_back(LandmarkObs{observation[j].id,xx,yy });
+			mappedObservations.push_back(LandmarkObs{observations[j].id,xx,yy });
 		}
 
 		//Observation association with landmark
@@ -226,7 +226,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			double dY = observationY - landmarkY;
 
 			//Since we assume the correlation between x direction and y direction is not exist, then rho in wiki is zero.
-			double weight = (1 / 2 * M_PI*stdLandmarkRange*stdLandmarkBearing))*exp(-(1 / 2)*(dX*dX / (stdLandmarkRange* stdLandmarkRange) + (dY*dY) / (stdLandmarkBearing*stdLandmarkBearing)));
+			double weight = (1 / 2 * M_PI*stdLandmarkRange*stdLandmarkBearing)*exp(-(1 / 2)*(dX*dX / (stdLandmarkRange* stdLandmarkRange) + (dY*dY) / (stdLandmarkBearing*stdLandmarkBearing)));
 
 			//if weight equal to zero. then multiply to the EPS. But I dont know why it have to multiply with EPS. 
 			// just make weight become zero can not work?
@@ -247,9 +247,10 @@ void ParticleFilter::resample() {
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 	//vector for new particles
-	vector<double> new_particles(num_particles);
+	vector<Particle> new_particles(num_particles);
 
 	//use discrete distribution to return particles by different weights
+	random_device rd;
 	default_random_engine gen(rd());
 	for (int i = 0; i < num_particles; i++) {
 		discrete_distribution<int> index(weights.begin(), weights.end());
