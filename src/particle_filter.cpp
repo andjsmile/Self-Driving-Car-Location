@@ -19,7 +19,9 @@
 
 #define EPS 0.00001
 
-std::default_random_engine gen;
+random_device rd;
+default_random_engine gen(rd());
+//std::default_random_engine gen;
 
 using namespace std;
 
@@ -36,31 +38,35 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   // Initializing the number of particles
   num_particles = 100;
 
-  // Extracting standard deviations
-  double std_x = std[0];
-  double std_y = std[1];
-  double std_theta = std[2];
+// normal distribution of distribution x with std_x 
+normal_distribution<double> dist_x(x, std[0]);
 
-  // Creating normal distributions
-  normal_distribution<double> dist_x(x, std_x);
-  normal_distribution<double> dist_y(y, std_y);
-  normal_distribution<double> dist_theta(theta, std_theta);
+// normal distribution of distribution y with std_y
+normal_distribution<double> dist_y(y, std[1]);
+
+//normal distribution of distribution theta with std_theta
+normal_distribution<double> angle_theta(theta, std[2]);
 
   // Generate particles with normal distribution with mean on GPS values.
-  for (int i = 0; i < num_particles; i++) {
+for (int i = 0; i < num_particles; ++i) {
+	//Using struct to make a particle structure and assign every information about each particles
+	Particle particle;
+	particle.id = i;
+	particle.x = dist_x(gen);
+	particle.y = dist_y(gen);
+	particle.theta = angle_theta(gen);
 
-    Particle particle;
-    particle.id = i;
-    particle.x = dist_x(gen);
-    particle.y = dist_y(gen);
-    particle.theta = dist_theta(gen);
-    particle.weight = 1.0;
+	// assign weight=1 to each particle 
+	particle.weight = 1.0;
 
-    particles.push_back(particle);
+	// add particle to ParticleFilter class =>  std::vector<Particle> particles;
+	// with this method, every particle and vecotr particles can be generated.
+	//add structure into a vector.
+	particles.push_back(particle);
 	}
-
-  // The filter is now initialized.
-  is_initialized = true;
+//after initialized, is_initialized should be true. If not, paricle fitler will always become initialized and uselessful.
+is_initialized = true;
+//I wonder if the 'return' can be added.
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
