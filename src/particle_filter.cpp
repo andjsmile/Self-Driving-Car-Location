@@ -38,11 +38,11 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	double std_theta = std[2];
 
 	// normal distribution of distribution x with std_x 
-	std::normal_distribution<> dist_x(x, std_x );
+	std::normal_distribution<double> dist_x(x, std_x );
 	// normal distribution of distribution y with std_y
-	std::normal_distribution<> dist_y(y, std_y );
+	std::normal_distribution<double> dist_y(y, std_y );
 	//normal distribution of distribution theta with std_theta
-	std::normal_distribution<> angle_theta(theta, std_theta);
+	std::normal_distribution<double> angle_theta(theta, std_theta);
 
 	//Generating the particles with these normal distribution 
 	for (int i = 0; i < num_particles; ++i) {
@@ -78,12 +78,12 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	double std_y = std_pos[1];
 	double std_theta = std_pos[2];
 
-	// normal distribution of distribution x with std_x 
-	std::normal_distribution<> dist_x(x, std_x);
+	// normal distribution of distribution x with zero mean and each std.
+	std::normal_distribution<double> dist_x(0, std_x);
 	// normal distribution of distribution y with std_y
-	std::normal_distribution<> dist_y(y, std_y);
+	std::normal_distribution<double> dist_y(0, std_y);
 	//normal distribution of distribution theta with std_theta
-	std::normal_distribution<> angle_theta(theta, std_theta);
+	std::normal_distribution<double> angle_theta(0, std_theta);
 
 	// it needs for loop
 	
