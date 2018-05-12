@@ -64,7 +64,7 @@ for (int i = 0; i < num_particles; ++i) {
 	}
 //after initialized, is_initialized should be true. If not, paricle fitler will always become initialized and uselessful.
 is_initialized = true;
-//I wonder if the 'return' can be added.
+
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
@@ -76,13 +76,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	// the standard variance although extract from sigma_pos from ParticleFilter::init, the each function inclass is saperated , so 
 	// if we want to use the std_sigma of each parameters, we should re-extract again.
 
-	// Engine for later generation of particles
-
-
-	//double std_x = std_pos[0];
-	//double std_y = std_pos[1];
-	//double std_theta = std_pos[2];
-
 	// normal distribution of distribution x with zero mean and each std.
 	normal_distribution<double> dist_x(0, std_pos[0]);
 	// normal distribution of distribution y with std_y
@@ -91,7 +84,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	normal_distribution<double> angle_theta(0, std_pos[2]);
 
 	// it needs for loop
-
 	for (int i = 0; i < num_particles; i++) {
 		//double theta = particles[i].theta;
 		if (fabs(yaw_rate) >= EPS) {
@@ -116,9 +108,9 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	//   observed measurement to this particular landmark.
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
-	//observed measurement?
+
 	int n_observation = observations.size();
-	//size of predicted measurement? 
+
 	int n_predictions = predicted.size();
 
 	for (int i = 0; i < n_observation; i++) {
@@ -134,10 +126,10 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 			//double distance = dist(observations[i].x, observations[i].y, predicted[j].x, predicted[j].y);
 
 			//dari code with direct calculation
-			double xDistance = observations[i].x - predicted[j].x;
-			double yDistance = observations[i].y - predicted[j].y;
+			//double xDistance = observations[i].x - predicted[j].x;
+			//double yDistance = observations[i].y - predicted[j].y;
 
-			double distance = xDistance * xDistance + yDistance * yDistance;
+			//double distance = xDistance * xDistance + yDistance * yDistance;
 
 			// if distance is smaller than the distance, then save the id , then iterate all the predicted value
 			//finally find the most nearest precited to GT value. 
