@@ -17,12 +17,12 @@
 
 #include "particle_filter.h"
 
-#define EPS 0.0001
+#define EPS 0.00001
 
 using namespace std;
 
-//random_device rd;
-//default_random_engine gen(rd());
+random_device rd;
+default_random_engine gen(rd());
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
@@ -34,10 +34,8 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 		return;
 	}
 	// Engine for later generation of particles
-	random_device rd;
-	default_random_engine gen(rd());
 
-	num_particles = 1000;
+	num_particles = 100;
 
 	double std_x = std[0];
 	double std_y = std[1];
