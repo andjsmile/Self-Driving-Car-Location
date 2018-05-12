@@ -264,8 +264,6 @@ void ParticleFilter::resample() {
 	vector<Particle> new_particles(num_particles);
 
 	//use discrete distribution to return particles by different weights
-	random_device rd;
-	default_random_engine gen(rd());
 	for (int i = 0; i < num_particles; i++) {
 		discrete_distribution<int> index(weights.begin(), weights.end());
 		new_particles[i] = particles[index(gen)];
