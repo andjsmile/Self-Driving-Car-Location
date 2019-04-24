@@ -18,9 +18,6 @@ by using these weights, algorithm generates the actual vehicle position
 4.resample the weight. 
 by using the wheel theory in udacity class, weights are resample in order to use in next step. 
 
-![Simulator Run Capture](https://github.com/Fred159/CarND-Kidnapped-Vehicle-Project/blob/master/run%20picture%20pf.jpg)
-
-![Success Run Capture](https://github.com/Fred159/CarND-Kidnapped-Vehicle-Project/blob/master/Success%20Run.jpg)
 
 ## Environment 
 1. Docker windows
